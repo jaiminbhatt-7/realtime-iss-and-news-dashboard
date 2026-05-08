@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { calculateDistance, calculateSpeed } from '../utils/haversine';
+import { calculateSpeed } from '../utils/haversine';
 
 export function useISSData() {
   const [positions, setPositions] = useState([]); // Last 15 positions
@@ -14,7 +14,7 @@ export function useISSData() {
   const fetchLocationName = async (lat, lon) => {
     try {
       const res = await axios.get(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`
+        `/api/nominatim/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`
       );
       if (res.data && res.data.address) {
         const addr = res.data.address;
@@ -31,7 +31,7 @@ export function useISSData() {
 
   const fetchAstronauts = async () => {
     try {
-      const res = await axios.get('http://api.open-notify.org/astros.json');
+      const res = await axios.get('/api/iss/astros.json');
       if (res.data) {
         setAstronauts({
           number: res.data.number,
@@ -46,7 +46,7 @@ export function useISSData() {
   const fetchISSLocation = useCallback(async () => {
     try {
       setError(null);
-      const res = await axios.get('http://api.open-notify.org/iss-now.json');
+      const res = await axios.get('/api/iss/iss-now.json');
       const data = res.data;
       
       if (data.message === "success") {
@@ -61,12 +61,11 @@ export function useISSData() {
           let speed = 0;
           
           if (lastPos) {
-            const dist = calculateDistance(lastPos.lat, lastPos.lon, newPos.lat, newPos.lon);
             const timeDiff = newPos.timestamp - lastPos.timestamp; // in seconds
-            speed = calculateSpeed(dist, timeDiff);
+            speed = calculateSpeed(lastPos, newPos, timeDiff);
             
             // Sometimes APIs return the same timestamp if cached too heavily, avoid infinity
-            if (!isFinite(speed)) speed = 0;
+            if (!isFinite(speed) || isNaN(speed)) speed = 0;
             
             setCurrentSpeed(speed);
             

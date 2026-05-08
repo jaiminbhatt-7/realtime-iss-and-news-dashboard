@@ -61,27 +61,17 @@ export default function Chatbot({ issData, newsData }) {
       ${issContext}
       ${newsContext}`;
 
-      let conversation = `<|system|>\n${systemPrompt}</s>\n`;
-      trimmedMessages.forEach(msg => {
-        if (msg.role === 'user') {
-          conversation += `<|user|>\n${msg.content}</s>\n`;
-        } else {
-          conversation += `<|assistant|>\n${msg.content}</s>\n`;
-        }
-      });
-      conversation += `<|assistant|>\n`;
-
-      const response = await hf.textGeneration({
+      const response = await hf.chatCompletion({
         model: 'mistralai/Mistral-7B-Instruct-v0.2',
-        inputs: conversation,
-        parameters: {
-          max_new_tokens: 150,
-          temperature: 0.1,
-          return_full_text: false,
-        }
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...trimmedMessages
+        ],
+        max_tokens: 150,
+        temperature: 0.1,
       });
 
-      const aiResponse = response.generated_text.trim();
+      const aiResponse = response.choices[0].message.content.trim();
       setMessages(prev => {
         const updated = [...prev, { role: 'assistant', content: aiResponse }];
         return updated.length > 30 ? updated.slice(updated.length - 30) : updated;
