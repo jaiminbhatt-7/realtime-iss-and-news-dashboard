@@ -25,10 +25,15 @@ export default function DataCharts({ issSpeeds, newsArticles }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      {/* ISS Speed Chart */}
       <div className="bg-card text-card-foreground p-4 rounded-lg border shadow-sm">
         <h2 className="text-xl font-bold mb-4">ISS Speed Trend (Last 30)</h2>
-        <div className="h-64">
+        <div className="h-64 relative">
+          {issSpeeds.length < 2 && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/80 z-10 text-muted-foreground">
+              <span className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-2"></span>
+              Gathering speed data... ({15 - (issSpeeds.length * 15)}s)
+            </div>
+          )}
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={issSpeeds}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
@@ -52,6 +57,7 @@ export default function DataCharts({ issSpeeds, newsArticles }) {
                 strokeWidth={2}
                 dot={{ r: 3 }}
                 activeDot={{ r: 5 }}
+                isAnimationActive={false}
               />
             </LineChart>
           </ResponsiveContainer>
