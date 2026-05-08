@@ -79,7 +79,18 @@ export default function Chatbot({ issData, newsData }) {
 
     } catch (err) {
       console.error("Chatbot error", err);
-      setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error. Please check your Hugging Face API key or try again later." }]);
+      let errorMessage = "Sorry, I encountered an error. Please check your Hugging Face API key or try again later.";
+      
+      if (err.httpResponse && err.httpResponse.body && err.httpResponse.body.error) {
+        const hfError = err.httpResponse.body.error;
+        if (hfError.message && hfError.message.includes('provider you have enabled')) {
+          errorMessage = `Hugging Face requires you to enable a free Inference Provider. Please go to your Hugging Face Account Settings -> Inference Providers and connect a free provider (like Together or Featherless) to use the Mistral model.`;
+        } else {
+          errorMessage = `API Error: ${hfError.message || hfError}`;
+        }
+      }
+
+      setMessages(prev => [...prev, { role: 'assistant', content: errorMessage }]);
     } finally {
       setIsTyping(false);
     }
